@@ -1,0 +1,3 @@
+quality=360p
+format=mp4
+save_path=/Users/konpe/Desktop/new folder
