@@ -1,6 +1,5 @@
 import os
 import sys
-import subprocess
 import tkinter as tk
 from tkinter import Tk, StringVar
 from tkinter import filedialog
@@ -9,9 +8,11 @@ from tkinter import messagebox
 import yt_dlp
 
 if sys.platform == "win32":
-    ffmpeg_path = os.path.join(os.path.dirname(__file__), "ffmpeg", "ffmpeg.exe")
+    ffmpeg_path = os.path.join(os.path.dirname(__file__), "ffmpeg", "ffmpeg_win","bin","ffmpeg.exe")
+    text_col="#000000"
 elif sys.platform == "darwin":
     ffmpeg_path = os.path.join(os.path.dirname(__file__), "ffmpeg","ffmpeg")
+    text_col="#FFFFFF"
 else:
     raise OSError("サポートされていない OS です")
 
@@ -39,7 +40,7 @@ standard_font="Times New Roman"
 frame_1=tk.Frame(root)
 label_1=ttk.Label(frame_1,
                 text="YouTubeのリンクを入力",
-                foreground="#FFFFFF",
+                foreground=text_col,
                 font=(standard_font,12),
                 padding=(0,0))
 
@@ -50,7 +51,7 @@ frame_3=tk.Frame(root)
 frame_3_1=tk.Frame(frame_3)
 label_2=ttk.Label(frame_3_1,
                 text="画質を選択",
-                foreground="#FFFFFF",
+                foreground=text_col,
                 font=(standard_font,12),
                 padding=(0,0))
 quality_option=StringVar()
@@ -58,7 +59,7 @@ combo1=ttk.Combobox(frame_3_1,state="readonly",textvariable=quality_option,value
 frame_3_2=tk.Frame(frame_3)
 label_3=ttk.Label(frame_3_2,
                 text="フォーマットを選択",
-                foreground="#FFFFFF",
+                foreground=text_col,
                 font=(standard_font,12),
                 padding=(0,0))
 format_option=StringVar()
@@ -94,7 +95,7 @@ combo1.config(state="readonly")
 frame_4=tk.Frame(root)
 label_4=ttk.Label(frame_4,
                   text="保存先:",
-                  foreground="#FFFFFF",
+                  foreground=text_col,
                   font=(standard_font,12),
                   padding=(0,0))
 entry_1=ttk.Entry(frame_4,state="readonly")
@@ -128,9 +129,15 @@ button_3=ttk.Button(frame_5,text="オプション")
 button_4=ttk.Button(frame_5,text="ダウンロード開始",command=lambda:download())
 
 def download():
+    url=text_1.get("1.0", "end-1c").strip()
+    save_path=entry_1.get()
+    if not url:
+        messagebox.showerror("エラー", "URLが入力されていません")
+        return
+    if not os.path.exists(save_path):
+        messagebox.showerror("エラー","保存先が存在しません")
+        return
     if combo2.get()=="mp4":
-        url=text_1.get("1.0", "end-1c").strip()
-        save_path=entry_1.get()
         if not url:
             messagebox.showerror("エラー", "URLが入力されていません")
             return
@@ -156,16 +163,8 @@ def download():
             'ffmpeg_location': ffmpeg_path ,
             "outtmpl": os.path.join(save_path, "%(title)s.%(ext)s"),
         }
-        print(format_id)
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([url])
     
     elif combo2.get()=="mp3":
-        url=text_1.get("1.0", "end-1c").strip()
-        save_path=entry_1.get()
-        if not url:
-            messagebox.showerror("エラー", "URLが入力されていません")
-            return
         kbps=combo1.get()
         ydl_opts={
             "format": "bestaudio/best",
@@ -177,14 +176,7 @@ def download():
             }],
             "outtmpl": os.path.join(save_path, "%(title)s.%(ext)s"),
         }
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([url])
     elif combo2.get() == "wav":
-        url = text_1.get("1.0", "end-1c").strip()
-        save_path=entry_1.get()
-        if not url:
-            messagebox.showerror("エラー", "URLが入力されていません")
-            return
         ydl_opts = {
             "format": "bestaudio/best",
             "outtmpl": os.path.join(save_path, "%(title)s.%(ext)s"),
@@ -194,8 +186,9 @@ def download():
                 "preferredcodec": "wav",
             }],
         }
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([url])
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        ydl.download([url])
+    messagebox.showinfo("","ダウンロードが完了しました。")
 
 frame_1.pack(fill="x",padx=10,pady=2)
 label_1.pack(side="left")
